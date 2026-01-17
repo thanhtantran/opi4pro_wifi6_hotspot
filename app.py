@@ -29,14 +29,14 @@ class HotspotManager:
         cmd = ['create_ap']
         
         # Add options
+        if config.get('encryption') and config['encryption'] != 'WPA2':
+            cmd.extend(['--encryption', config['encryption']])
+        
         if config.get('channel') and config['channel'] != 'auto':
             cmd.extend(['-c', config['channel']])
         
-        if config.get('wpaVersion') and config['wpaVersion'] != '1+2':
-            cmd.extend(['-w', config['wpaVersion']])
-        
-        if config.get('method') and config['method'] != 'nat':
-            cmd.extend(['-m', config['method']])
+        if config.get('bandwidth') and config['bandwidth'] != '20':
+            cmd.extend(['--bandwidth', config['bandwidth']])
         
         if config.get('hidden'):
             cmd.append('--hidden')
@@ -47,42 +47,11 @@ class HotspotManager:
         if config.get('noVirt'):
             cmd.append('--no-virt')
         
-        if config.get('macFilter'):
-            cmd.append('--mac-filter')
-        
-        if config.get('ieee80211n'):
-            cmd.append('--ieee80211n')
-        
-        if config.get('ieee80211ac'):
-            cmd.append('--ieee80211ac')
-        
-        if config.get('freqBand') and config['freqBand'] != '2.4':
-            cmd.extend(['--freq-band', config['freqBand']])
-        
-        if config.get('country'):
-            cmd.extend(['--country', config['country']])
-        
-        if config.get('gateway'):
-            cmd.extend(['-g', config['gateway']])
-        
-        if config.get('daemon'):
-            cmd.append('--daemon')
-        
-        if config.get('noHaveged'):
-            cmd.append('--no-haveged')
-        
-        if config.get('noDns'):
-            cmd.append('--no-dns')
-        
         # Add required parameters
         cmd.append(config.get('wifiInterface', 'wlan0'))
         
-        # Add internet interface only if not using -n flag
-        if config.get('method') != 'none' and not config.get('noInternet'):
-            if config.get('internetInterface'):
-                cmd.append(config['internetInterface'])
-        else:
-            cmd.append('-n')
+        if config.get('internetInterface'):
+            cmd.append(config['internetInterface'])
         
         cmd.append(config.get('ssid', 'OrangePi-Hotspot'))
         
