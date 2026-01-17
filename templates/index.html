@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
@@ -130,11 +130,11 @@
 
         .main-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 500px 1fr;
             gap: 24px;
         }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 1200px) {
             .main-grid {
                 grid-template-columns: 1fr;
             }
@@ -199,6 +199,9 @@
         }
 
         .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
             margin-top: 12px;
         }
 
@@ -206,7 +209,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 8px;
             cursor: pointer;
         }
 
@@ -217,8 +219,17 @@
         }
 
         .checkbox-label span {
-            font-size: 14px;
+            font-size: 13px;
             color: #4a5568;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 20px 0 12px 0;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
         }
 
         .btn {
@@ -231,7 +242,7 @@
             cursor: pointer;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-center: center;
             gap: 8px;
             transition: all 0.2s;
         }
@@ -241,7 +252,7 @@
             color: white;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background: #5a67d8;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
@@ -252,7 +263,7 @@
             color: white;
         }
 
-        .btn-danger:hover {
+        .btn-danger:hover:not(:disabled) {
             background: #e53e3e;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
@@ -396,6 +407,30 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        .config-scroll {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .config-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .config-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .config-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .config-scroll::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
     </style>
 </head>
 <body>
@@ -451,95 +486,161 @@
                     <h2>Configuration</h2>
                 </div>
 
-                <form id="configForm">
-                    <div class="form-group">
-                        <label class="form-label">WiFi Interface</label>
-                        <select id="wifiInterface" class="form-select">
-                            <option value="wlan0">wlan0</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Internet Interface</label>
-                        <select id="internetInterface" class="form-select">
-                            <option value="eth0">eth0</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">SSID (Network Name)</label>
-                        <input type="text" id="ssid" class="form-input" value="OrangePi-Hotspot" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Password (leave empty for open network)</label>
-                        <input type="password" id="password" class="form-input" placeholder="Minimum 8 characters">
-                    </div>
-
-                    <div class="form-row">
+                <div class="config-scroll">
+                    <form id="configForm">
+                        <!-- Basic Settings -->
                         <div class="form-group">
-                            <label class="form-label">Encryption</label>
-                            <select id="encryption" class="form-select">
-                                <option value="WPA2">WPA2</option>
-                                <option value="WPA">WPA</option>
-                                <option value="WPA/WPA2">WPA/WPA2</option>
-                                <option value="none">Open</option>
+                            <label class="form-label">WiFi Interface</label>
+                            <select id="wifiInterface" class="form-select">
+                                <option value="wlan0">wlan0</option>
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Channel</label>
-                            <select id="channel" class="form-select">
-                                <option value="auto">Auto</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                                <option value="9">9</option>
-                                <option value="10">10</option>
-                                <option value="11">11</option>
+                            <label class="form-label">Internet Interface</label>
+                            <select id="internetInterface" class="form-select">
+                                <option value="eth0">eth0</option>
                             </select>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Bandwidth</label>
-                        <select id="bandwidth" class="form-select">
-                            <option value="20">20 MHz</option>
-                            <option value="40">40 MHz</option>
-                        </select>
-                    </div>
+                        <div class="form-group">
+                            <label class="form-label">SSID (Network Name)</label>
+                            <input type="text" id="ssid" class="form-input" value="OrangePi-Hotspot" required>
+                        </div>
 
-                    <div class="checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="hidden">
-                            <span>Hidden Network</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="isolate">
-                            <span>Isolate Clients</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="noVirt">
-                            <span>No Virtual Interface</span>
-                        </label>
-                    </div>
+                        <div class="form-group">
+                            <label class="form-label">Password (leave empty for open network)</label>
+                            <input type="password" id="password" class="form-input" placeholder="Minimum 8 characters">
+                        </div>
 
-                    <div class="form-group" style="margin-top: 24px;">
-                        <button type="button" id="startBtn" class="btn btn-primary">
-                            <i data-lucide="play" style="width: 18px; height: 18px;"></i>
-                            <span>Start Hotspot</span>
-                        </button>
-                        <button type="button" id="stopBtn" class="btn btn-danger" style="display: none; margin-top: 12px;">
-                            <i data-lucide="square" style="width: 18px; height: 18px;"></i>
-                            <span>Stop Hotspot</span>
-                        </button>
-                    </div>
-                </form>
+                        <!-- Wireless Settings -->
+                        <div class="section-title">Wireless Settings</div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">WPA Version</label>
+                                <select id="wpaVersion" class="form-select">
+                                    <option value="1+2">WPA/WPA2 (1+2)</option>
+                                    <option value="2">WPA2 only</option>
+                                    <option value="1">WPA only</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Channel</label>
+                                <select id="channel" class="form-select">
+                                    <option value="auto">Auto</option>
+                                    <option value="1">1 (2.412 GHz)</option>
+                                    <option value="2">2 (2.417 GHz)</option>
+                                    <option value="3">3 (2.422 GHz)</option>
+                                    <option value="4">4 (2.427 GHz)</option>
+                                    <option value="5">5 (2.432 GHz)</option>
+                                    <option value="6">6 (2.437 GHz)</option>
+                                    <option value="7">7 (2.442 GHz)</option>
+                                    <option value="8">8 (2.447 GHz)</option>
+                                    <option value="9">9 (2.452 GHz)</option>
+                                    <option value="10">10 (2.457 GHz)</option>
+                                    <option value="11">11 (2.462 GHz)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Frequency Band</label>
+                                <select id="freqBand" class="form-select">
+                                    <option value="2.4">2.4 GHz</option>
+                                    <option value="5">5 GHz</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Country Code</label>
+                                <input type="text" id="country" class="form-input" placeholder="e.g., US, GB, VN" maxlength="2">
+                            </div>
+                        </div>
+
+                        <!-- Network Settings -->
+                        <div class="section-title">Network Settings</div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Sharing Method</label>
+                                <select id="method" class="form-select">
+                                    <option value="nat">NAT</option>
+                                    <option value="bridge">Bridge</option>
+                                    <option value="none">No Internet (Standalone AP)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Gateway IP</label>
+                                <input type="text" id="gateway" class="form-input" value="192.168.12.1">
+                            </div>
+                        </div>
+
+                        <!-- Advanced Options -->
+                        <div class="section-title">Advanced Options</div>
+
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="hidden">
+                                <span>Hidden Network</span>
+                            </label>
+
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="isolate">
+                                <span>Isolate Clients</span>
+                            </label>
+
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="noVirt">
+                                <span>No Virtual Interface</span>
+                            </label>
+
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="macFilter">
+                                <span>MAC Filtering</span>
+                            </label>
+
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="ieee80211n">
+                                <span>IEEE 802.11n (HT)</span>
+                            </label>
+
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="ieee80211ac">
+                                <span>IEEE 802.11ac (VHT)</span>
+                            </label>
+
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="daemon">
+                                <span>Run as Daemon</span>
+                            </label>
+
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="noHaveged">
+                                <span>No Haveged</span>
+                            </label>
+
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="noDns">
+                                <span>Disable DNS</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 24px;">
+                            <button type="button" id="startBtn" class="btn btn-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                <span>Start Hotspot</span>
+                            </button>
+                            <button type="button" id="stopBtn" class="btn btn-danger" style="display: none; margin-top: 12px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                                <span>Stop Hotspot</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 24px;">
@@ -613,7 +714,10 @@
     <script>
         let isRunning = false;
         let updateInterval = null;
-        let lastStats = { wifi: {}, internet: {} };
+        let lastStats = { 
+            wifi: { txBytes: 0, rxBytes: 0, timestamp: 0 }, 
+            internet: { txBytes: 0, rxBytes: 0, timestamp: 0 } 
+        };
 
         // Initialize Lucide icons
         lucide.createIcons();
@@ -684,27 +788,28 @@
             const config = getConfig();
             let cmd = 'sudo create_ap';
             
-            if (config.encryption !== 'WPA2') {
-                cmd += ` --encryption ${config.encryption}`;
-            }
-            if (config.channel !== 'auto') {
-                cmd += ` -c ${config.channel}`;
-            }
-            if (config.bandwidth !== '20') {
-                cmd += ` --bandwidth ${config.bandwidth}`;
-            }
+            if (config.channel !== 'auto') cmd += ` -c ${config.channel}`;
+            if (config.wpaVersion !== '1+2') cmd += ` -w ${config.wpaVersion}`;
+            if (config.method !== 'nat') cmd += ` -m ${config.method}`;
             if (config.hidden) cmd += ' --hidden';
             if (config.isolate) cmd += ' --isolate-clients';
             if (config.noVirt) cmd += ' --no-virt';
+            if (config.macFilter) cmd += ' --mac-filter';
+            if (config.ieee80211n) cmd += ' --ieee80211n';
+            if (config.ieee80211ac) cmd += ' --ieee80211ac';
+            if (config.freqBand !== '2.4') cmd += ` --freq-band ${config.freqBand}`;
+            if (config.country) cmd += ` --country ${config.country}`;
+            if (config.gateway !== '192.168.12.1') cmd += ` -g ${config.gateway}`;
+            if (config.daemon) cmd += ' --daemon';
+            if (config.noHaveged) cmd += ' --no-haveged';
+            if (config.noDns) cmd += ' --no-dns';
             
             cmd += ` ${config.wifiInterface}`;
-            if (config.internetInterface) {
+            if (config.method !== 'none' && config.internetInterface) {
                 cmd += ` ${config.internetInterface}`;
             }
             cmd += ` ${config.ssid}`;
-            if (config.password) {
-                cmd += ` ${config.password}`;
-            }
+            if (config.password) cmd += ` ${config.password}`;
             
             document.getElementById('commandPreview').textContent = cmd;
         }
@@ -716,12 +821,21 @@
                 internetInterface: document.getElementById('internetInterface').value,
                 ssid: document.getElementById('ssid').value,
                 password: document.getElementById('password').value,
-                encryption: document.getElementById('encryption').value,
+                wpaVersion: document.getElementById('wpaVersion').value,
                 channel: document.getElementById('channel').value,
-                bandwidth: document.getElementById('bandwidth').value,
+                method: document.getElementById('method').value,
+                freqBand: document.getElementById('freqBand').value,
+                country: document.getElementById('country').value.toUpperCase(),
+                gateway: document.getElementById('gateway').value,
                 hidden: document.getElementById('hidden').checked,
                 isolate: document.getElementById('isolate').checked,
-                noVirt: document.getElementById('noVirt').checked
+                noVirt: document.getElementById('noVirt').checked,
+                macFilter: document.getElementById('macFilter').checked,
+                ieee80211n: document.getElementById('ieee80211n').checked,
+                ieee80211ac: document.getElementById('ieee80211ac').checked,
+                daemon: document.getElementById('daemon').checked,
+                noHaveged: document.getElementById('noHaveged').checked,
+                noDns: document.getElementById('noDns').checked
             };
         }
 
@@ -761,7 +875,7 @@
                 return;
             }
             
-            if (config.password && config.password.length < 8 && config.encryption !== 'none') {
+            if (config.password && config.password.length < 8) {
                 alert('Password must be at least 8 characters');
                 return;
             }
@@ -819,12 +933,12 @@
                     stopUpdates();
                 } else {
                     alert(`Error stopping hotspot: ${data.error}`);
-                    addLog(`Error: ${data.error}`);
+                    addLog(`✗ Error: ${data.error}`);
                     document.getElementById('stopBtn').disabled = false;
                 }
             } catch (error) {
                 alert(`Error: ${error.message}`);
-                addLog(`Error: ${error.message}`);
+                addLog(`✗ Error: ${error.message}`);
                 document.getElementById('stopBtn').disabled = false;
             }
         }
@@ -894,11 +1008,14 @@
                     `).join('');
                 }
                 
-                // Calculate rates
-                const wifiTxRate = lastStats.wifi.txBytes ? 
-                    (data.wifiStats.txBytes - lastStats.wifi.txBytes) : 0;
-                const wifiRxRate = lastStats.wifi.rxBytes ? 
-                    (data.wifiStats.rxBytes - lastStats.wifi.rxBytes) : 0;
+                // Calculate rates (bytes per second)
+                const now = Date.now();
+                const timeDiff = lastStats.wifi.timestamp ? (now - lastStats.wifi.timestamp) / 1000 : 2;
+                
+                const wifiTxRate = lastStats.wifi.txBytes > 0 ? 
+                    (data.wifiStats.txBytes - lastStats.wifi.txBytes) / timeDiff : 0;
+                const wifiRxRate = lastStats.wifi.rxBytes > 0 ? 
+                    (data.wifiStats.rxBytes - lastStats.wifi.rxBytes) / timeDiff : 0;
                 
                 document.getElementById('txRate').textContent = formatBytes(wifiTxRate) + '/s';
                 document.getElementById('rxRate').textContent = formatBytes(wifiRxRate) + '/s';
@@ -913,9 +1030,17 @@
                               data.internetStats.txBytes + data.internetStats.rxBytes;
                 document.getElementById('totalTraffic').textContent = formatBytes(total);
                 
-                // Save last stats
-                lastStats.wifi = data.wifiStats;
-                lastStats.internet = data.internetStats;
+                // Save last stats with timestamp
+                lastStats.wifi = {
+                    txBytes: data.wifiStats.txBytes,
+                    rxBytes: data.wifiStats.rxBytes,
+                    timestamp: now
+                };
+                lastStats.internet = {
+                    txBytes: data.internetStats.txBytes,
+                    rxBytes: data.internetStats.rxBytes,
+                    timestamp: now
+                };
                 
             } catch (error) {
                 console.error('Error updating status:', error);
@@ -924,6 +1049,10 @@
 
         // Start updates
         function startUpdates() {
+            lastStats = { 
+                wifi: { txBytes: 0, rxBytes: 0, timestamp: Date.now() }, 
+                internet: { txBytes: 0, rxBytes: 0, timestamp: Date.now() } 
+            };
             updateStatus();
             updateInterval = setInterval(updateStatus, 2000);
         }
@@ -934,7 +1063,10 @@
                 clearInterval(updateInterval);
                 updateInterval = null;
             }
-            lastStats = { wifi: {}, internet: {} };
+            lastStats = { 
+                wifi: { txBytes: 0, rxBytes: 0, timestamp: 0 }, 
+                internet: { txBytes: 0, rxBytes: 0, timestamp: 0 } 
+            };
         }
 
         // Event listeners
