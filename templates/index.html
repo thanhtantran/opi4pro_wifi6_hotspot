@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi Hotspot Manager - Orange Pi</title>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 28px;
+            color: #1a202c;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-active .status-dot {
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        .status-inactive .status-dot {
+            background: #718096;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card.blue { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-card.green { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); }
+        .stat-card.purple { background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%); }
+        .stat-card.orange { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .panel-header h2 {
+            font-size: 20px;
+            color: #1a202c;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-input:disabled, .form-select:disabled {
+            background: #f7fafc;
+            cursor: not-allowed;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .checkbox-group {
+            margin-top: 12px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-label span {
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .command-preview {
+            background: #1a202c;
+            color: #68d391;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .client-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .client-item {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 8px;
+        }
+
+        .client-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .client-name {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .client-ip {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .client-mac {
+            font-size: 12px;
+            color: #a0aec0;
+            font-family: 'Monaco', monospace;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #a0aec0;
+        }
+
+        .stats-table {
+            width: 100%;
+        }
+
+        .stats-table tr {
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .stats-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .stats-table td {
+            padding: 12px 0;
+            font-size: 14px;
+        }
+
+        .stats-table td:first-child {
+            color: #718096;
+        }
+
+        .stats-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .stats-total {
+            color: #667eea !important;
+        }
+
+        .logs-container {
+            background: #1a202c;
+            color: #cbd5e0;
+            padding: 16px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Monaco', monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .info-box {
+            background: #ebf8ff;
+            border: 1px solid #90cdf4;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+        }
+
+        .info-box p {
+            color: #2c5282;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-box strong {
+            color: #2a4365;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f4f6;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-title">
+                    <i data-lucide="wifi" style="color: #667eea; width: 32px; height: 32px;"></i>
+                    <h1>WiFi Hotspot Manager</h1>
+                </div>
+                <div id="statusBadge" class="status-badge status-inactive">
+                    <span class="status-dot"></span>
+                    <span>Inactive</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="statsGrid" class="stats-grid" style="display: none;">
+            <div class="stat-card blue">
+                <div class="stat-header">
+                    <i data-lucide="activity" style="width: 20px; height: 20px;"></i>
+                    <span class="stat-label">UPTIME</span>
+                </div>
+                <div class="stat-value" id="uptime">0h 0m 0s</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-header">
+                    <i data-lucide="users" style="width: 20px; height: 20px;"></i>
+                    <span class="stat-label">CLIENTS</span>
+                </div>
+                <div class="stat-value" id="clientCount">0</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-header">
+                    <i data-lucide="arrow-up" style="width: 20px; height: 20px;"></i>
+                    <span class="stat-label">TX RATE</span>
+                </div>
+                <div class="stat-value" id="txRate">0 B/s</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-header">
+                    <i data-lucide="arrow-down" style="width: 20px; height: 20px;"></i>
+                    <span class="stat-label">RX RATE</span>
+                </div>
+                <div class="stat-value" id="rxRate">0 B/s</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <i data-lucide="settings" style="color: #667eea; width: 24px; height: 24px;"></i>
+                    <h2>Configuration</h2>
+                </div>
+
+                <form id="configForm">
+                    <div class="form-group">
+                        <label class="form-label">WiFi Interface</label>
+                        <select id="wifiInterface" class="form-select">
+                            <option value="wlan0">wlan0</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Internet Interface</label>
+                        <select id="internetInterface" class="form-select">
+                            <option value="eth0">eth0</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">SSID (Network Name)</label>
+                        <input type="text" id="ssid" class="form-input" value="OrangePi-Hotspot" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password (leave empty for open network)</label>
+                        <input type="password" id="password" class="form-input" placeholder="Minimum 8 characters">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Encryption</label>
+                            <select id="encryption" class="form-select">
+                                <option value="WPA2">WPA2</option>
+                                <option value="WPA">WPA</option>
+                                <option value="WPA/WPA2">WPA/WPA2</option>
+                                <option value="none">Open</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Channel</label>
+                            <select id="channel" class="form-select">
+                                <option value="auto">Auto</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Bandwidth</label>
+                        <select id="bandwidth" class="form-select">
+                            <option value="20">20 MHz</option>
+                            <option value="40">40 MHz</option>
+                        </select>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="hidden">
+                            <span>Hidden Network</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="isolate">
+                            <span>Isolate Clients</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="noVirt">
+                            <span>No Virtual Interface</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 24px;">
+                        <button type="button" id="startBtn" class="btn btn-primary">
+                            <i data-lucide="play" style="width: 18px; height: 18px;"></i>
+                            <span>Start Hotspot</span>
+                        </button>
+                        <button type="button" id="stopBtn" class="btn btn-danger" style="display: none; margin-top: 12px;">
+                            <i data-lucide="square" style="width: 18px; height: 18px;"></i>
+                            <span>Stop Hotspot</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="panel">
+                    <div class="panel-header">
+                        <i data-lucide="terminal" style="color: #667eea; width: 24px; height: 24px;"></i>
+                        <h2>Command Preview</h2>
+                    </div>
+                    <div class="command-preview" id="commandPreview">create_ap wlan0 eth0 OrangePi-Hotspot</div>
+                </div>
+
+                <div class="panel" id="clientsPanel" style="display: none;">
+                    <div class="panel-header">
+                        <i data-lucide="users" style="color: #667eea; width: 24px; height: 24px;"></i>
+                        <h2>Connected Clients</h2>
+                    </div>
+                    <div class="client-list" id="clientList">
+                        <div class="empty-state">
+                            <i data-lucide="wifi-off" style="width: 48px; height: 48px; margin: 0 auto 12px;"></i>
+                            <p>No clients connected yet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel" id="trafficPanel" style="display: none;">
+                    <div class="panel-header">
+                        <i data-lucide="bar-chart-2" style="color: #667eea; width: 24px; height: 24px;"></i>
+                        <h2>Traffic Statistics</h2>
+                    </div>
+                    <table class="stats-table">
+                        <tr>
+                            <td>WiFi Transmitted:</td>
+                            <td id="wifiTx">0 B</td>
+                        </tr>
+                        <tr>
+                            <td>WiFi Received:</td>
+                            <td id="wifiRx">0 B</td>
+                        </tr>
+                        <tr>
+                            <td>Internet Transmitted:</td>
+                            <td id="ethTx">0 B</td>
+                        </tr>
+                        <tr>
+                            <td>Internet Received:</td>
+                            <td id="ethRx">0 B</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Traffic:</strong></td>
+                            <td class="stats-total" id="totalTraffic">0 B</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <i data-lucide="scroll-text" style="color: #667eea; width: 24px; height: 24px;"></i>
+                        <h2>Logs</h2>
+                    </div>
+                    <div class="logs-container" id="logsContainer">
+                        <div style="color: #718096;">No logs yet...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <p><strong>Note:</strong> This application requires root privileges to manage WiFi hotspots. Make sure to run the Flask application with sudo. Network interfaces are automatically detected from your system.</p>
+        </div>
+    </div>
+
+    <script>
+        let isRunning = false;
+        let updateInterval = null;
+        let lastStats = { wifi: {}, internet: {} };
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Load network interfaces
+        async function loadInterfaces() {
+            try {
+                const response = await fetch('/api/interfaces');
+                const data = await response.json();
+                
+                const wifiSelect = document.getElementById('wifiInterface');
+                const ethSelect = document.getElementById('internetInterface');
+                
+                wifiSelect.innerHTML = '';
+                ethSelect.innerHTML = '';
+                
+                let wifiFound = false;
+                let ethFound = false;
+                
+                data.interfaces.forEach(iface => {
+                    const option = document.createElement('option');
+                    option.value = iface.name;
+                    
+                    // Show interface status
+                    const status = iface.isup ? '✓' : '✗';
+                    option.textContent = `${iface.name} ${status}`;
+                    
+                    if (iface.type === 'wifi') {
+                        wifiSelect.appendChild(option);
+                        wifiFound = true;
+                    } else if (iface.type === 'ethernet') {
+                        ethSelect.appendChild(option);
+                        ethFound = true;
+                    }
+                });
+                
+                // Add fallback options if no interfaces found
+                if (!wifiFound) {
+                    const option = document.createElement('option');
+                    option.value = 'wlan0';
+                    option.textContent = 'wlan0 (default)';
+                    wifiSelect.appendChild(option);
+                }
+                
+                if (!ethFound) {
+                    const option = document.createElement('option');
+                    option.value = 'eth0';
+                    option.textContent = 'eth0 (default)';
+                    ethSelect.appendChild(option);
+                }
+                
+                addLog(`Loaded ${data.interfaces.length} network interfaces`);
+            } catch (error) {
+                console.error('Error loading interfaces:', error);
+                addLog(`Error loading interfaces: ${error.message}`);
+                
+                // Add default options on error
+                const wifiSelect = document.getElementById('wifiInterface');
+                const ethSelect = document.getElementById('internetInterface');
+                
+                wifiSelect.innerHTML = '<option value="wlan0">wlan0 (default)</option>';
+                ethSelect.innerHTML = '<option value="eth0">eth0 (default)</option>';
+            }
+        }
+
+        // Update command preview
+        function updateCommandPreview() {
+            const config = getConfig();
+            let cmd = 'sudo create_ap';
+            
+            if (config.encryption !== 'WPA2') {
+                cmd += ` --encryption ${config.encryption}`;
+            }
+            if (config.channel !== 'auto') {
+                cmd += ` -c ${config.channel}`;
+            }
+            if (config.bandwidth !== '20') {
+                cmd += ` --bandwidth ${config.bandwidth}`;
+            }
+            if (config.hidden) cmd += ' --hidden';
+            if (config.isolate) cmd += ' --isolate-clients';
+            if (config.noVirt) cmd += ' --no-virt';
+            
+            cmd += ` ${config.wifiInterface}`;
+            if (config.internetInterface) {
+                cmd += ` ${config.internetInterface}`;
+            }
+            cmd += ` ${config.ssid}`;
+            if (config.password) {
+                cmd += ` ${config.password}`;
+            }
+            
+            document.getElementById('commandPreview').textContent = cmd;
+        }
+
+        // Get configuration from form
+        function getConfig() {
+            return {
+                wifiInterface: document.getElementById('wifiInterface').value,
+                internetInterface: document.getElementById('internetInterface').value,
+                ssid: document.getElementById('ssid').value,
+                password: document.getElementById('password').value,
+                encryption: document.getElementById('encryption').value,
+                channel: document.getElementById('channel').value,
+                bandwidth: document.getElementById('bandwidth').value,
+                hidden: document.getElementById('hidden').checked,
+                isolate: document.getElementById('isolate').checked,
+                noVirt: document.getElementById('noVirt').checked
+            };
+        }
+
+        // Format bytes
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Format uptime
+        function formatUptime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            return `${h}h ${m}m ${s}s`;
+        }
+
+        // Add log entry
+        function addLog(message) {
+            const container = document.getElementById('logsContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${timestamp}] ${message}`;
+            container.insertBefore(entry, container.firstChild);
+        }
+
+        // Start hotspot
+        async function startHotspot() {
+            const config = getConfig();
+            
+            if (!config.ssid) {
+                alert('Please enter an SSID');
+                return;
+            }
+            
+            if (config.password && config.password.length < 8 && config.encryption !== 'none') {
+                alert('Password must be at least 8 characters');
+                return;
+            }
+            
+            try {
+                const startBtn = document.getElementById('startBtn');
+                startBtn.disabled = true;
+                startBtn.innerHTML = '<span class="loading"></span> Starting...';
+                
+                addLog(`Starting hotspot with SSID: ${config.ssid}`);
+                
+                const response = await fetch('/api/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog(`✓ Hotspot started successfully: ${config.ssid}`);
+                    addLog(`PID: ${data.pid}`);
+                    addLog(`Command: ${data.command}`);
+                    setRunningState(true);
+                    startUpdates();
+                } else {
+                    alert(`Error starting hotspot: ${data.error}`);
+                    addLog(`✗ Error: ${data.error}`);
+                    startBtn.disabled = false;
+                    startBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Start Hotspot';
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                addLog(`✗ Error: ${error.message}`);
+                const startBtn = document.getElementById('startBtn');
+                startBtn.disabled = false;
+                startBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Start Hotspot';
+            }
+        }
+
+        // Stop hotspot
+        async function stopHotspot() {
+            try {
+                document.getElementById('stopBtn').disabled = true;
+                
+                const response = await fetch('/api/stop', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog('Hotspot stopped');
+                    setRunningState(false);
+                    stopUpdates();
+                } else {
+                    alert(`Error stopping hotspot: ${data.error}`);
+                    addLog(`Error: ${data.error}`);
+                    document.getElementById('stopBtn').disabled = false;
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                addLog(`Error: ${error.message}`);
+                document.getElementById('stopBtn').disabled = false;
+            }
+        }
+
+        // Set running state
+        function setRunningState(running) {
+            isRunning = running;
+            
+            const statusBadge = document.getElementById('statusBadge');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const statsGrid = document.getElementById('statsGrid');
+            const clientsPanel = document.getElementById('clientsPanel');
+            const trafficPanel = document.getElementById('trafficPanel');
+            
+            const inputs = document.querySelectorAll('#configForm input, #configForm select');
+            
+            if (running) {
+                statusBadge.className = 'status-badge status-active';
+                statusBadge.innerHTML = '<span class="status-dot"></span><span>Active</span>';
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'block';
+                stopBtn.disabled = false;
+                statsGrid.style.display = 'grid';
+                clientsPanel.style.display = 'block';
+                trafficPanel.style.display = 'block';
+                inputs.forEach(input => input.disabled = true);
+            } else {
+                statusBadge.className = 'status-badge status-inactive';
+                statusBadge.innerHTML = '<span class="status-dot"></span><span>Inactive</span>';
+                startBtn.style.display = 'block';
+                startBtn.disabled = false;
+                startBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Start Hotspot';
+                stopBtn.style.display = 'none';
+                statsGrid.style.display = 'none';
+                clientsPanel.style.display = 'none';
+                trafficPanel.style.display = 'none';
+                inputs.forEach(input => input.disabled = false);
+            }
+        }
+
+        // Update status
+        async function updateStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                // Update uptime
+                document.getElementById('uptime').textContent = formatUptime(data.status.uptime);
+                
+                // Update clients
+                document.getElementById('clientCount').textContent = data.clientCount;
+                
+                const clientList = document.getElementById('clientList');
+                if (data.clients.length === 0) {
+                    clientList.innerHTML = '<div class="empty-state"><i data-lucide="wifi-off" style="width: 48px; height: 48px; margin: 0 auto 12px;"></i><p>No clients connected yet</p></div>';
+                    lucide.createIcons();
+                } else {
+                    clientList.innerHTML = data.clients.map(client => `
+                        <div class="client-item">
+                            <div class="client-header">
+                                <span class="client-name">${client.hostname}</span>
+                                <span class="client-ip">${client.ip}</span>
+                            </div>
+                            <div class="client-mac">${client.mac}</div>
+                        </div>
+                    `).join('');
+                }
+                
+                // Calculate rates
+                const wifiTxRate = lastStats.wifi.txBytes ? 
+                    (data.wifiStats.txBytes - lastStats.wifi.txBytes) : 0;
+                const wifiRxRate = lastStats.wifi.rxBytes ? 
+                    (data.wifiStats.rxBytes - lastStats.wifi.rxBytes) : 0;
+                
+                document.getElementById('txRate').textContent = formatBytes(wifiTxRate) + '/s';
+                document.getElementById('rxRate').textContent = formatBytes(wifiRxRate) + '/s';
+                
+                // Update traffic stats
+                document.getElementById('wifiTx').textContent = formatBytes(data.wifiStats.txBytes);
+                document.getElementById('wifiRx').textContent = formatBytes(data.wifiStats.rxBytes);
+                document.getElementById('ethTx').textContent = formatBytes(data.internetStats.txBytes);
+                document.getElementById('ethRx').textContent = formatBytes(data.internetStats.rxBytes);
+                
+                const total = data.wifiStats.txBytes + data.wifiStats.rxBytes + 
+                              data.internetStats.txBytes + data.internetStats.rxBytes;
+                document.getElementById('totalTraffic').textContent = formatBytes(total);
+                
+                // Save last stats
+                lastStats.wifi = data.wifiStats;
+                lastStats.internet = data.internetStats;
+                
+            } catch (error) {
+                console.error('Error updating status:', error);
+            }
+        }
+
+        // Start updates
+        function startUpdates() {
+            updateStatus();
+            updateInterval = setInterval(updateStatus, 2000);
+        }
+
+        // Stop updates
+        function stopUpdates() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+            lastStats = { wifi: {}, internet: {} };
+        }
+
+        // Event listeners
+        document.getElementById('startBtn').addEventListener('click', startHotspot);
+        document.getElementById('stopBtn').addEventListener('click', stopHotspot);
+
+        // Update command preview on input change
+        document.querySelectorAll('#configForm input, #configForm select').forEach(element => {
+            element.addEventListener('change', updateCommandPreview);
+            element.addEventListener('input', updateCommandPreview);
+        });
+
+        // Initialize
+        loadInterfaces();
+        updateCommandPreview();
+        addLog('WiFi Hotspot Manager initialized');
+    </script>
+</body>
+</html>
