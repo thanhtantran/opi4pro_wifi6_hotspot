@@ -2,7 +2,7 @@
 
 A modern web-based interface for managing WiFi hotspots on Orange Pi 4Pro using the `create_ap` script. Features real-time monitoring, comprehensive configuration options, and an intuitive user interface.
 
-![WiFi Hotspot Manager](https://img.shields.io/badge/Python-3.6+-blue.svg)
+![WiFi Hotspot Manager](https://img.shields.io/badge/Python-3.12+-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-3.0.0-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
