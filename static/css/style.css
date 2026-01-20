@@ -316,6 +316,43 @@ body {
     word-break: break-all;
 }
 
+/* WiFi Standards Section */
+.checkbox-label strong {
+    color: #1a202c;
+}
+
+.checkbox-label input[type="checkbox"]:checked + span strong {
+    color: #667eea;
+}
+
+/* Advanced capabilities hint */
+.form-label span {
+    display: inline-block;
+    margin-left: 4px;
+}
+
+/* Info text under inputs */
+.form-group > div:last-child {
+    line-height: 1.4;
+}
+
+/* Button link for collapsible sections */
+.btn-link {
+    background: none;
+    border: none;
+    color: #667eea;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+    text-align: left;
+    width: 100%;
+}
+
+.btn-link:hover {
+    color: #5a67d8;
+    text-decoration: underline;
+}
 
 /* Log colors */
 .log-success {

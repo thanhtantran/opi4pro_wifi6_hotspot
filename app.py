@@ -363,20 +363,37 @@ class HotspotManager:
         if config.get('isolate'):
             cmd.append('--isolate-clients')
         
-        # IEEE 802.11n
+        # IEEE 802.11n (HT mode)
         if config.get('ieee80211n'):
             cmd.append('--ieee80211n')
-        
-        # IEEE 802.11ac
-        if config.get('ieee80211ac'):
-            cmd.append('--ieee80211ac')
-        
-        # HT capabilities
-        if config.get('htCapab'):
+            
+            # Add HT capabilities if provided, otherwise use default
+            if config.get('htCapab'):
+                cmd.extend(['--ht_capab', config['htCapab']])
+            else:
+                # Auto-detect based on frequency band
+                if config.get('freqBand') == '5':
+                    cmd.extend(['--ht_capab', '[HT40+][SHORT-GI-20][SHORT-GI-40]'])
+                else:
+                    cmd.extend(['--ht_capab', '[HT40+][SHORT-GI-20][SHORT-GI-40]'])
+        elif config.get('htCapab'):
+            # If HT capabilities specified without enabling 802.11n, still add it
+            cmd.append('--ieee80211n')
             cmd.extend(['--ht_capab', config['htCapab']])
         
-        # VHT capabilities
-        if config.get('vhtCapab'):
+        # IEEE 802.11ac (VHT mode)
+        if config.get('ieee80211ac'):
+            cmd.append('--ieee80211ac')
+            
+            # Add VHT capabilities if provided, otherwise use default
+            if config.get('vhtCapab'):
+                cmd.extend(['--vht_capab', config['vhtCapab']])
+            else:
+                # Auto-detect based on capabilities
+                cmd.extend(['--vht_capab', '[MAX-MPDU-11454][SHORT-GI-80][TX-STBC-2BY1][RX-STBC-1]'])
+        elif config.get('vhtCapab'):
+            # If VHT capabilities specified without enabling 802.11ac, still add it
+            cmd.append('--ieee80211ac')
             cmd.extend(['--vht_capab', config['vhtCapab']])
         
         # Country code

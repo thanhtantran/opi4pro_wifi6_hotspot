@@ -103,6 +103,7 @@ function setupEventListeners() {
     document.getElementById('stopBtn').addEventListener('click', stopHotspot);
     document.getElementById('loadLastConfig').addEventListener('click', loadLastConfig);
     document.getElementById('toggleAdvanced').addEventListener('click', toggleAdvancedSettings);
+    document.getElementById('toggleWifiCapab').addEventListener('click', toggleWifiCapabilities);
     
     // Update command preview on any input change
     const formElements = document.querySelectorAll('#configForm input, #configForm select');
@@ -125,8 +126,38 @@ function setupEventListeners() {
     document.getElementById('freqBand').addEventListener('change', (e) => {
         updateChannelList(e.target.value);
     });
+    
+    // Auto-enable 802.11n when 802.11ac is enabled (ac requires n)
+    document.getElementById('ieee80211ac').addEventListener('change', (e) => {
+        if (e.target.checked) {
+            document.getElementById('ieee80211n').checked = true;
+            
+            // Also check if 5GHz is selected
+            const freqBand = document.getElementById('freqBand').value;
+            if (freqBand !== '5') {
+                if (confirm('802.11ac requires 5 GHz frequency band. Switch to 5 GHz?')) {
+                    document.getElementById('freqBand').value = '5';
+                    updateChannelList('5');
+                }
+            }
+        }
+        updateCommandPreview();
+    });
 }
 
+// Toggle WiFi capabilities section
+function toggleWifiCapabilities() {
+    const wifiCapabSettings = document.getElementById('wifiCapabSettings');
+    const toggleBtn = document.getElementById('toggleWifiCapab');
+    
+    if (wifiCapabSettings.style.display === 'none') {
+        wifiCapabSettings.style.display = 'block';
+        toggleBtn.textContent = '⚙️ Hide Advanced WiFi Capabilities';
+    } else {
+        wifiCapabSettings.style.display = 'none';
+        toggleBtn.textContent = '⚙️ Advanced WiFi Capabilities (Optional)';
+    }
+}
 
 // Toggle advanced settings
 function toggleAdvancedSettings() {
@@ -371,10 +402,21 @@ function updateCommandPreview() {
     if (config.redirectToLocalhost) cmd += ' --redirect-to-localhost';
     if (config.hostapdDebug) cmd += ` --hostapd-debug ${config.hostapdDebug}`;
     if (config.isolate) cmd += ' --isolate-clients';
-    if (config.ieee80211n) cmd += ' --ieee80211n';
-    if (config.ieee80211ac) cmd += ' --ieee80211ac';
-    if (config.htCapab) cmd += ` --ht_capab ${config.htCapab}`;
-    if (config.vhtCapab) cmd += ` --vht_capab ${config.vhtCapab}`;
+    
+    // IEEE 802.11n/ac
+    if (config.ieee80211n) {
+        cmd += ' --ieee80211n';
+        if (config.htCapab) {
+            cmd += ` --ht_capab "${config.htCapab}"`;
+        }
+    }
+    if (config.ieee80211ac) {
+        cmd += ' --ieee80211ac';
+        if (config.vhtCapab) {
+            cmd += ` --vht_capab "${config.vhtCapab}"`;
+        }
+    }
+    
     if (config.country) cmd += ` --country ${config.country}`;
     if (config.freqBand) cmd += ` --freq-band ${config.freqBand}`;
     if (config.driver) cmd += ` --driver ${config.driver}`;
@@ -397,9 +439,9 @@ function updateCommandPreview() {
     if (config.internetInterface && !config.noInternet) {
         cmd += ` ${config.internetInterface}`;
     }
-    cmd += ` ${config.ssid}`;
+    cmd += ` "${config.ssid}"`;
     if (config.password) {
-        cmd += ` ${config.password}`;
+        cmd += ` "${config.password}"`;
     }
     
     document.getElementById('commandPreview').textContent = cmd;
