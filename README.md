@@ -56,14 +56,21 @@ Giao diện web hiện đại để quản lý WiFi hotspot trên Orange Pi sử
 ### Giao diện chính
 
 Dashboard hiển thị tất cả tùy chọn cấu hình với phần thiết lập nâng cao có thể thu gọn.
+<img width="1481" height="888" alt="Screenshot_1" src="https://github.com/user-attachments/assets/4e67b2e1-5813-47fb-ab2c-5a4ab09d4c7d" />
+
 
 ### Giám sát trực tiếp
 
 Theo dõi client đang kết nối với cường độ tín hiệu, băng thông sử dụng và thống kê thời gian thực.
+<img width="1481" height="888" alt="Screenshot_2" src="https://github.com/user-attachments/assets/4f3b848f-5ebf-4c11-81a9-8b3027426901" />
+
 
 ### Hiển thị cấu hình
 
 Xem cấu hình đang chạy hiện tại bao gồm chuẩn WiFi, tần số, kênh và thiết lập bảo mật.
+<img width="1481" height="888" alt="Screenshot_3" src="https://github.com/user-attachments/assets/e0a27724-932b-4bcc-97a4-b703d7704dd4" />
+
+
 
 ## 🚀 Bắt đầu nhanh
 
