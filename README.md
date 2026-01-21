@@ -1,56 +1,66 @@
 # WiFi Hotspot Manager for Orange Pi
 
-A modern web-based interface for managing WiFi hotspots on Orange Pi 4Pro using the `create_ap` script. Features real-time monitoring, comprehensive configuration options, and an intuitive user interface.
+A modern web-based interface for managing WiFi hotspots on Orange Pi using **hostapd** and **dnsmasq**. Features real-time monitoring, comprehensive configuration options, full support for WiFi 4/5/6 standards, and an intuitive user interface.
 
 ![WiFi Hotspot Manager](https://img.shields.io/badge/Python-3.12+-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-3.0.0-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![WiFi](https://img.shields.io/badge/WiFi-4%2F5%2F6-orange.svg)
 
 ## 🌟 Features
 
 ### 📡 Comprehensive WiFi Configuration
-- **WPA Security**: WPA, WPA2, or WPA/WPA2 mixed mode
-- **Channel Selection**: Auto or manual (1-11) with frequency display
-- **Frequency Bands**: 2.4 GHz and 5 GHz support
-- **Country Code**: Regulatory domain configuration
-- **Advanced Standards**: IEEE 802.11n (HT) and 802.11ac (VHT)
+- **WPA Security**: WPA, WPA2, and WPA3 (SAE) support
+- **Channel Selection**: Full channel support for 2.4 GHz (1-13) and 5 GHz (36-165)
+- **Frequency Bands**: 2.4 GHz and 5 GHz with automatic channel selection
+- **Country Code**: Regulatory domain configuration for proper compliance
+- **WiFi Standards**: 
+  - **802.11n (WiFi 4)**: Up to 600 Mbps
+  - **802.11ac (WiFi 5)**: Up to 3.5 Gbps
+  - **802.11ax (WiFi 6)**: Up to 9.6 Gbps (hardware dependent)
 
 ### 🌐 Network Sharing Options
 - **NAT Mode**: Network Address Translation (default)
 - **Bridge Mode**: Direct bridging to existing network
 - **Standalone Mode**: No internet sharing (isolated AP)
 - **Custom Gateway**: Configure custom gateway IP addresses
+- **DHCP Server**: Built-in DHCP with configurable IP ranges
 
 ### 📊 Real-Time Monitoring
 - **Live Statistics**: Uptime, connected clients, TX/RX rates
-- **Client Information**: View connected devices with IP, MAC, and hostname
+- **Client Information**: View connected devices with IP, MAC, hostname, and signal strength
 - **Traffic Monitoring**: Track data transfer rates and total bandwidth usage
-- **Activity Logs**: Timestamped event logging
+- **Activity Logs**: Timestamped event logging with client connection/disconnection events
 
 ### ⚙️ Advanced Options
-- Hidden network (SSID broadcast control)
-- Client isolation (prevent client-to-client communication)
-- MAC address filtering
-- Virtual interface control
-- DNS server configuration
-- Daemon mode support
+- **Hidden Network**: SSID broadcast control
+- **Client Isolation**: Prevent client-to-client communication (AP isolation)
+- **MAC Address Filtering**: Whitelist-based access control
+- **HT/VHT/HE Capabilities**: Fine-tune 802.11n/ac/ax parameters
+- **DNS Configuration**: Custom DNS servers or disable DNS
+- **Max Stations**: Limit maximum number of connected clients
+- **PSK Mode**: Use pre-shared key (64 hex digits)
 
 ## 📸 Screenshots
 
 ### Main Interface
-The dashboard shows all configuration options and real-time statistics.
+The dashboard shows all configuration options with collapsible advanced settings.
 
 ### Live Monitoring
-Track connected clients and bandwidth usage in real-time.
+Track connected clients with signal strength, bandwidth usage, and real-time statistics.
+
+### Configuration Display
+View current running configuration including WiFi standards, frequency, channel, and security settings.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Orange Pi 4Pro
+- Orange Pi device (tested on Orange Pi 4 Pro)
 - Python 3.12 or higher
-- `create_ap` script installed
+- **hostapd** and **dnsmasq** installed
 - Root/sudo access
+- WiFi adapter with AP mode support (tested on Orange Pi 4 Pro)
 
 ### Installation
 
@@ -58,20 +68,19 @@ Track connected clients and bandwidth usage in real-time.
 ```bash
 git clone https://github.com/thanhtantran/opi4pro_wifi6_hotspot.git
 cd opi4pro_wifi6_hotspot
-
 ```
 
-2. **Install Python dependencies**
+2. **Install Python and hostapd dependencies**
 ```bash
+sudo apt update
+sudo apt install hostapd dnsmasq python3-pip
 pip3 install -r requirements.txt
 ```
 
-3. **Install create_ap** (in the OS of Orange PI 4 Pro already had this app, only install if it is not already installed)
-```bash
-git clone https://github.com/oblique/create_ap
-cd create_ap
-sudo make install
-cd ..
+3. **Disable the hostapd service if any**
+```
+sudo systemctl stop hostapd
+sudo systemctl disable hostapd
 ```
 
 4. **Run the application**
@@ -88,7 +97,6 @@ Or from another device on the network:
 ```
 http://your-orange-pi-ip:5000
 ```
-
 ## 📁 Project Structure
 
 ```
@@ -163,50 +171,6 @@ Stop the currently running hotspot
 ### GET `/api/status`
 Get current hotspot status, connected clients, and statistics
 
-## 🛠️ Troubleshooting
-
-### WiFi interface not showing up
-```bash
-# Check if interface exists
-ip link show
-
-# Unblock WiFi if needed
-sudo rfkill unblock wifi
-```
-
-### NetworkManager conflicts
-```bash
-# Stop NetworkManager temporarily
-sudo systemctl stop NetworkManager
-
-# Or configure it to ignore your WiFi interface
-sudo nano /etc/NetworkManager/NetworkManager.conf
-# Add:
-[keyfile]
-unmanaged-devices=interface-name:wlan0
-```
-
-### Permission denied
-Make sure you're running with sudo:
-```bash
-sudo python3 app.py
-```
-
-### create_ap not found
-```bash
-# Install create_ap
-git clone https://github.com/oblique/create_ap
-cd create_ap
-sudo make install
-```
-
-### WiFi adapter doesn't support AP mode
-```bash
-# Check adapter capabilities
-iw list | grep -A 10 "Supported interface modes"
-# Look for "AP" in the output
-```
-
 ## 🔒 Security Considerations
 
 - **Production Use**: For production deployments, add authentication to the web interface
@@ -247,41 +211,6 @@ sudo systemctl daemon-reload
 sudo systemctl enable wifi-hotspot
 sudo systemctl start wifi-hotspot
 ```
-
-## 📝 Usage Examples
-
-### Basic Hotspot with Internet Sharing
-```
-SSID: MyHotspot
-Password: MySecurePass123
-WiFi Interface: wlan0
-Internet Interface: eth0
-Method: NAT
-```
-
-### Hidden Network for Security
-```
-SSID: SecretNetwork
-Password: VerySecurePass456
-Hidden Network: ✓
-Isolate Clients: ✓
-```
-
-### High-Performance 5GHz Hotspot
-```
-SSID: FastAP
-Frequency Band: 5 GHz
-IEEE 802.11ac: ✓
-Channel: Auto
-```
-
-### Standalone AP (No Internet)
-```
-SSID: LocalNetwork
-Sharing Method: None
-Gateway: 192.168.12.1
-```
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -298,7 +227,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [create_ap](https://github.com/oblique/create_ap) - The excellent WiFi AP creation script
+- [hostapd](https://w1.fi/hostapd) - The excellent WiFi AP app
 - [Flask](https://flask.palletsprojects.com/) - Python web framework
 - [Lucide Icons](https://lucide.dev/) - Beautiful icon set
 - [psutil](https://github.com/giampaolo/psutil) - Cross-platform system utilities
