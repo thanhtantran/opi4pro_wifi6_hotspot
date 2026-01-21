@@ -27,8 +27,6 @@ cd hostapd-2.11/hostapd
 
 ### 4. Sao chép file cấu hình mặc định
 
-> ⚠️ Lưu ý: tên file là `defconfig` (không phải `deconfig`)
-
 ```bash
 cp defconfig .config
 ```
