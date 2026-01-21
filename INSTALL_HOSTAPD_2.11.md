@@ -52,9 +52,9 @@ CONFIG_LIBNL32=y
 > 💡 Ghi chú:
 > - `CONFIG_IEEE80211AX=y` → bật hỗ trợ **802.11ax (HE)**
 > - `CONFIG_IEEE80211AC=y` → bật **802.11ac (VHT)**
-> - Không có tùy chọn "be" — có thể bạn nhầm với "HE" (High Efficiency)
+> - `CONFIG_IEEE80211BE=y` → tùy chọn BE mới thử nghiệm
 
-Lưu file: `Ctrl+O` → Enter → `Ctrl+X`
+Lưu file: `Ctrl+X` → Y → Enter
 
 ### 6. Build
 
