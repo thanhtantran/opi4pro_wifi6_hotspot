@@ -3,12 +3,6 @@ let isRunning = false;
 let updateInterval = null;
 let lastStats = { wifi: {}, internet: {} };
 
-// Initialize Lucide icons
-document.addEventListener('DOMContentLoaded', () => {
-    lucide.createIcons();
-    init();
-});
-
 // Channel definitions
 const CHANNELS = {
     '2.4': [
@@ -55,6 +49,12 @@ const CHANNELS = {
     ]
 };
 
+// Initialize Lucide icons
+document.addEventListener('DOMContentLoaded', () => {
+    lucide.createIcons();
+    init();
+});
+
 // Initialize application
 async function init() {
     await loadInterfaces();
@@ -64,37 +64,8 @@ async function init() {
     
     await checkStatus();
     await loadLastConfig();
-    updateCommandPreview();
     setupEventListeners();
     addLog('WiFi Hotspot Manager initialized', 'success');
-}
-
-// Update channel list based on frequency band
-function updateChannelList(freqBand) {
-    const channelSelect = document.getElementById('channel');
-    const currentValue = channelSelect.value;
-    
-    channelSelect.innerHTML = '';
-    
-    const channels = CHANNELS[freqBand] || CHANNELS['2.4'];
-    
-    channels.forEach(channel => {
-        const option = document.createElement('option');
-        option.value = channel.value;
-        option.textContent = channel.label;
-        channelSelect.appendChild(option);
-    });
-    
-    // Try to restore previous value if it exists in new list
-    const hasCurrentValue = Array.from(channelSelect.options).some(opt => opt.value === currentValue);
-    if (hasCurrentValue) {
-        channelSelect.value = currentValue;
-    } else {
-        // Set default based on band
-        channelSelect.value = freqBand === '5' ? '36' : '6';
-    }
-    
-    updateCommandPreview();
 }
 
 // Setup event listeners
@@ -104,17 +75,17 @@ function setupEventListeners() {
     document.getElementById('loadLastConfig').addEventListener('click', loadLastConfig);
     document.getElementById('toggleAdvanced').addEventListener('click', toggleAdvancedSettings);
     document.getElementById('toggleWifiCapab').addEventListener('click', toggleWifiCapabilities);
+    document.getElementById('viewConfig').addEventListener('click', viewHostapdConfig);
     
     // Update command preview on any input change
     const formElements = document.querySelectorAll('#configForm input, #configForm select');
     formElements.forEach(element => {
-        element.addEventListener('change', updateCommandPreview);
-        element.addEventListener('input', updateCommandPreview);
-    });
-    
-    // Show/hide daemon options
-    document.getElementById('daemon').addEventListener('change', (e) => {
-        document.getElementById('daemonOptions').style.display = e.target.checked ? 'block' : 'none';
+        element.addEventListener('change', () => {
+            // No command preview needed for hostapd mode
+        });
+        element.addEventListener('input', () => {
+            // No command preview needed for hostapd mode
+        });
     });
     
     // Disable internet interface when noInternet is checked
@@ -141,21 +112,39 @@ function setupEventListeners() {
                 }
             }
         }
-        updateCommandPreview();
+    });
+    
+    // Auto-enable 802.11n when 802.11ax is enabled
+    document.getElementById('ieee80211ax').addEventListener('change', (e) => {
+        if (e.target.checked) {
+            document.getElementById('ieee80211n').checked = true;
+        }
     });
 }
 
-// Toggle WiFi capabilities section
-function toggleWifiCapabilities() {
-    const wifiCapabSettings = document.getElementById('wifiCapabSettings');
-    const toggleBtn = document.getElementById('toggleWifiCapab');
+// Update channel list based on frequency band
+function updateChannelList(freqBand) {
+    const channelSelect = document.getElementById('channel');
+    const currentValue = channelSelect.value;
     
-    if (wifiCapabSettings.style.display === 'none') {
-        wifiCapabSettings.style.display = 'block';
-        toggleBtn.textContent = '⚙️ Hide Advanced WiFi Capabilities';
+    channelSelect.innerHTML = '';
+    
+    const channels = CHANNELS[freqBand] || CHANNELS['2.4'];
+    
+    channels.forEach(channel => {
+        const option = document.createElement('option');
+        option.value = channel.value;
+        option.textContent = channel.label;
+        channelSelect.appendChild(option);
+    });
+    
+    // Try to restore previous value if it exists in new list
+    const hasCurrentValue = Array.from(channelSelect.options).some(opt => opt.value === currentValue);
+    if (hasCurrentValue) {
+        channelSelect.value = currentValue;
     } else {
-        wifiCapabSettings.style.display = 'none';
-        toggleBtn.textContent = '⚙️ Advanced WiFi Capabilities (Optional)';
+        // Set default based on band
+        channelSelect.value = freqBand === '5' ? '36' : '6';
     }
 }
 
@@ -171,6 +160,71 @@ function toggleAdvancedSettings() {
         advancedSettings.style.display = 'none';
         toggleBtn.textContent = 'Show';
     }
+}
+
+// Toggle WiFi capabilities section
+function toggleWifiCapabilities() {
+    const wifiCapabSettings = document.getElementById('wifiCapabSettings');
+    const toggleBtn = document.getElementById('toggleWifiCapab');
+    
+    if (wifiCapabSettings.style.display === 'none') {
+        wifiCapabSettings.style.display = 'block';
+        toggleBtn.textContent = 'Hide';
+    } else {
+        wifiCapabSettings.style.display = 'none';
+        toggleBtn.textContent = 'Show';
+    }
+}
+
+// View hostapd configuration
+async function viewHostapdConfig() {
+    try {
+        const response = await fetch('/api/hostapd-config');
+        const data = await response.json();
+        
+        if (data.config) {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.8); z-index: 9999;
+                display: flex; align-items: center; justify-content: center;
+                padding: 20px;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 12px; padding: 24px; max-width: 800px; width: 100%; max-height: 80vh; overflow: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2 style="margin: 0;">hostapd.conf</h2>
+                        <button onclick="this.closest('div').parentElement.remove()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #718096;">&times;</button>
+                    </div>
+                    <pre style="background: #1a202c; color: #68d391; padding: 16px; border-radius: 8px; overflow-x: auto; margin: 0; font-size: 13px; line-height: 1.5;">${escapeHtml(data.config)}</pre>
+                    <button onclick="this.closest('div').parentElement.remove()" style="margin-top: 16px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Close</button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        } else {
+            alert('No configuration file found. Start the hotspot first.');
+        }
+    } catch (error) {
+        alert('Error loading configuration: ' + error.message);
+        addLog('Error loading config: ' + error.message, 'error');
+    }
+}
+
+// Escape HTML for display
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Load network interfaces
@@ -243,6 +297,7 @@ async function checkStatus() {
             // Restore config to form
             if (data.status.config) {
                 restoreConfig(data.status.config);
+                updateCurrentConfigDisplay(data.status.config);
             }
             
             addLog('Restored connection to running hotspot', 'success');
@@ -295,43 +350,35 @@ function restoreConfig(config) {
     }
     
     // Advanced settings
-    if (config.method) document.getElementById('method').value = config.method;
     if (config.country) document.getElementById('country').value = config.country;
     if (config.gateway) document.getElementById('gateway').value = config.gateway;
     if (config.dhcpDns) document.getElementById('dhcpDns').value = config.dhcpDns;
-    if (config.mac) document.getElementById('mac').value = config.mac;
     if (config.driver) document.getElementById('driver').value = config.driver;
-    if (config.hostapdDebug) document.getElementById('hostapdDebug').value = config.hostapdDebug;
+    if (config.dhcpStart) document.getElementById('dhcpStart').value = config.dhcpStart;
+    if (config.dhcpEnd) document.getElementById('dhcpEnd').value = config.dhcpEnd;
+    if (config.leaseTime) document.getElementById('leaseTime').value = config.leaseTime;
+    if (config.maxStations) document.getElementById('maxStations').value = config.maxStations;
     if (config.htCapab) document.getElementById('htCapab').value = config.htCapab;
     if (config.vhtCapab) document.getElementById('vhtCapab').value = config.vhtCapab;
+    if (config.heCapab && document.getElementById('heCapab')) {
+        document.getElementById('heCapab').value = config.heCapab;
+    }
     if (config.macFilterAccept) document.getElementById('macFilterAccept').value = config.macFilterAccept;
     if (config.hostsFile) document.getElementById('hostsFile').value = config.hostsFile;
-    if (config.pidfile) document.getElementById('pidfile').value = config.pidfile;
-    if (config.logfile) document.getElementById('logfile').value = config.logfile;
     
     // Checkboxes
-    document.getElementById('hidden').checked = config.hidden || false;
-    document.getElementById('isolate').checked = config.isolate || false;
-    document.getElementById('noVirt').checked = config.noVirt || false;
     document.getElementById('ieee80211n').checked = config.ieee80211n || false;
     document.getElementById('ieee80211ac').checked = config.ieee80211ac || false;
+    if (document.getElementById('ieee80211ax')) {
+        document.getElementById('ieee80211ax').checked = config.ieee80211ax || false;
+    }
+    document.getElementById('hidden').checked = config.hidden || false;
+    document.getElementById('isolate').checked = config.isolate || false;
     document.getElementById('macFilter').checked = config.macFilter || false;
-    document.getElementById('redirectToLocalhost').checked = config.redirectToLocalhost || false;
     document.getElementById('noInternet').checked = config.noInternet || false;
     document.getElementById('noDns').checked = config.noDns || false;
     document.getElementById('noDnsmasq').checked = config.noDnsmasq || false;
-    document.getElementById('dnsHosts').checked = config.dnsHosts || false;
-    document.getElementById('noHaveged').checked = config.noHaveged || false;
-    document.getElementById('fixUnmanaged').checked = config.fixUnmanaged || false;
     document.getElementById('psk').checked = config.psk || false;
-    document.getElementById('daemon').checked = config.daemon || false;
-    
-    // Show daemon options if daemon is checked
-    if (config.daemon) {
-        document.getElementById('daemonOptions').style.display = 'block';
-    }
-    
-    updateCommandPreview();
 }
 
 // Get configuration from form
@@ -342,109 +389,45 @@ function getConfig() {
         password: document.getElementById('password').value,
         wpaVersion: document.getElementById('wpaVersion').value,
         channel: document.getElementById('channel').value,
-        
-        // Advanced settings
-        method: document.getElementById('method').value,
         freqBand: document.getElementById('freqBand').value,
         country: document.getElementById('country').value.toUpperCase(),
-        gateway: document.getElementById('gateway').value,
-        dhcpDns: document.getElementById('dhcpDns').value,
-        mac: document.getElementById('mac').value,
-        driver: document.getElementById('driver').value,
-        hostapdDebug: document.getElementById('hostapdDebug').value,
-        htCapab: document.getElementById('htCapab').value,
-        vhtCapab: document.getElementById('vhtCapab').value,
-        macFilterAccept: document.getElementById('macFilterAccept').value,
-        hostsFile: document.getElementById('hostsFile').value,
-        pidfile: document.getElementById('pidfile').value,
-        logfile: document.getElementById('logfile').value,
+        gateway: document.getElementById('gateway').value || '192.168.12.1',
+        dhcpDns: document.getElementById('dhcpDns').value || '8.8.8.8,8.8.4.4',
+        driver: document.getElementById('driver').value || 'nl80211',
         
-        // Checkboxes
-        hidden: document.getElementById('hidden').checked,
-        isolate: document.getElementById('isolate').checked,
-        noVirt: document.getElementById('noVirt').checked,
+        // DHCP settings
+        dhcpStart: document.getElementById('dhcpStart').value || '192.168.12.10',
+        dhcpEnd: document.getElementById('dhcpEnd').value || '192.168.12.100',
+        leaseTime: document.getElementById('leaseTime').value || '12h',
+        maxStations: document.getElementById('maxStations').value,
+        
+        // WiFi standards
         ieee80211n: document.getElementById('ieee80211n').checked,
         ieee80211ac: document.getElementById('ieee80211ac').checked,
+        ieee80211ax: document.getElementById('ieee80211ax')?.checked || false,
+        
+        // Capabilities
+        htCapab: document.getElementById('htCapab').value,
+        vhtCapab: document.getElementById('vhtCapab').value,
+        heCapab: document.getElementById('heCapab')?.value,
+        
+        // Other options
+        hidden: document.getElementById('hidden').checked,
+        isolate: document.getElementById('isolate').checked,
         macFilter: document.getElementById('macFilter').checked,
-        redirectToLocalhost: document.getElementById('redirectToLocalhost').checked,
+        macFilterAccept: document.getElementById('macFilterAccept').value,
+        hostsFile: document.getElementById('hostsFile').value,
         noInternet: document.getElementById('noInternet').checked,
         noDns: document.getElementById('noDns').checked,
         noDnsmasq: document.getElementById('noDnsmasq').checked,
-        dnsHosts: document.getElementById('dnsHosts').checked,
-        noHaveged: document.getElementById('noHaveged').checked,
-        fixUnmanaged: document.getElementById('fixUnmanaged').checked,
-        psk: document.getElementById('psk').checked,
-        daemon: document.getElementById('daemon').checked
+        psk: document.getElementById('psk').checked
     };
     
-    // Only add internetInterface if not disabled
     if (!config.noInternet) {
         config.internetInterface = document.getElementById('internetInterface').value;
     }
     
     return config;
-}
-
-// Update command preview
-function updateCommandPreview() {
-    const config = getConfig();
-    let cmd = 'sudo create_ap';
-    
-    // Add all options
-    if (config.channel) cmd += ` -c ${config.channel}`;
-    if (config.wpaVersion) cmd += ` -w ${config.wpaVersion}`;
-    if (config.noInternet) cmd += ' -n';
-    if (config.method && config.method !== 'nat') cmd += ` -m ${config.method}`;
-    if (config.psk) cmd += ' --psk';
-    if (config.hidden) cmd += ' --hidden';
-    if (config.macFilter) cmd += ' --mac-filter';
-    if (config.macFilterAccept) cmd += ` --mac-filter-accept ${config.macFilterAccept}`;
-    if (config.redirectToLocalhost) cmd += ' --redirect-to-localhost';
-    if (config.hostapdDebug) cmd += ` --hostapd-debug ${config.hostapdDebug}`;
-    if (config.isolate) cmd += ' --isolate-clients';
-    
-    // IEEE 802.11n/ac
-    if (config.ieee80211n) {
-        cmd += ' --ieee80211n';
-        if (config.htCapab) {
-            cmd += ` --ht_capab "${config.htCapab}"`;
-        }
-    }
-    if (config.ieee80211ac) {
-        cmd += ' --ieee80211ac';
-        if (config.vhtCapab) {
-            cmd += ` --vht_capab "${config.vhtCapab}"`;
-        }
-    }
-    
-    if (config.country) cmd += ` --country ${config.country}`;
-    if (config.freqBand) cmd += ` --freq-band ${config.freqBand}`;
-    if (config.driver) cmd += ` --driver ${config.driver}`;
-    if (config.noVirt) cmd += ' --no-virt';
-    if (config.noHaveged) cmd += ' --no-haveged';
-    if (config.fixUnmanaged) cmd += ' --fix-unmanaged';
-    if (config.mac) cmd += ` --mac ${config.mac}`;
-    if (config.dhcpDns) cmd += ` --dhcp-dns ${config.dhcpDns}`;
-    if (config.daemon) cmd += ' --daemon';
-    if (config.pidfile) cmd += ` --pidfile ${config.pidfile}`;
-    if (config.logfile) cmd += ` --logfile ${config.logfile}`;
-    if (config.gateway) cmd += ` -g ${config.gateway}`;
-    if (config.noDns) cmd += ' --no-dns';
-    if (config.noDnsmasq) cmd += ' --no-dnsmasq';
-    if (config.dnsHosts) cmd += ' -d';
-    if (config.hostsFile) cmd += ` -e ${config.hostsFile}`;
-    
-    // Required parameters
-    cmd += ` ${config.wifiInterface}`;
-    if (config.internetInterface && !config.noInternet) {
-        cmd += ` ${config.internetInterface}`;
-    }
-    cmd += ` "${config.ssid}"`;
-    if (config.password) {
-        cmd += ` "${config.password}"`;
-    }
-    
-    document.getElementById('commandPreview').textContent = cmd;
 }
 
 // Start hotspot
@@ -467,6 +450,12 @@ async function startHotspot() {
         return;
     }
     
+    // Validate 802.11ac on 5GHz
+    if (config.ieee80211ac && config.freqBand !== '5') {
+        alert('802.11ac requires 5 GHz frequency band');
+        return;
+    }
+    
     try {
         const startBtn = document.getElementById('startBtn');
         startBtn.disabled = true;
@@ -485,9 +474,14 @@ async function startHotspot() {
         if (data.success) {
             addLog(`✓ Hotspot started successfully`, 'success');
             addLog(`  SSID: ${config.ssid}`, 'success');
-            addLog(`  PID: ${data.pid}`, 'success');
-            addLog(`  Mode: ${data.mode}`, 'success');
+            addLog(`  hostapd PID: ${data.hostapd_pid}`, 'success');
+            if (data.dnsmasq_pid) {
+                addLog(`  dnsmasq PID: ${data.dnsmasq_pid}`, 'success');
+            }
+            addLog(`  Config file: ${data.config_file}`, 'success');
+            
             setRunningState(true);
+            updateCurrentConfigDisplay(config);
             startUpdates();
         } else {
             alert(`Error starting hotspot:\n${data.error}\n\n${data.details || ''}`);
@@ -553,6 +547,39 @@ async function stopHotspot() {
     }
 }
 
+// Update current configuration display
+function updateCurrentConfigDisplay(config) {
+    document.getElementById('currentSsid').textContent = config.ssid || '-';
+    
+    // WiFi Standard
+    let standard = [];
+    if (config.ieee80211ax) standard.push('WiFi 6 (802.11ax)');
+    if (config.ieee80211ac) standard.push('WiFi 5 (802.11ac)');
+    if (config.ieee80211n) standard.push('WiFi 4 (802.11n)');
+    document.getElementById('currentStandard').textContent = standard.join(', ') || 'Legacy';
+    
+    // Frequency
+    document.getElementById('currentFreq').textContent = config.freqBand === '5' ? '5 GHz' : '2.4 GHz';
+    
+    // Channel
+    document.getElementById('currentChannel').textContent = config.channel || '-';
+    
+    // Security
+    let security = 'Open';
+    if (config.password) {
+        if (config.wpaVersion === '3') {
+            security = 'WPA3 (SAE)';
+        } else if (config.wpaVersion === '2') {
+            security = 'WPA2';
+        } else {
+            security = 'WPA';
+        }
+    }
+    document.getElementById('currentSecurity').textContent = security;
+    
+    document.getElementById('currentConfigPanel').style.display = 'block';
+}
+
 // Set running state
 function setRunningState(running) {
     isRunning = running;
@@ -563,6 +590,7 @@ function setRunningState(running) {
     const statsGrid = document.getElementById('statsGrid');
     const clientsPanel = document.getElementById('clientsPanel');
     const trafficPanel = document.getElementById('trafficPanel');
+    const currentConfigPanel = document.getElementById('currentConfigPanel');
     
     const inputs = document.querySelectorAll('#configForm input, #configForm select');
     
@@ -576,8 +604,10 @@ function setRunningState(running) {
         statsGrid.style.display = 'grid';
         clientsPanel.style.display = 'block';
         trafficPanel.style.display = 'block';
+        currentConfigPanel.style.display = 'block';
         inputs.forEach(input => input.disabled = true);
         document.getElementById('loadLastConfig').disabled = true;
+        document.getElementById('viewConfig').disabled = false;
     } else {
         statusBadge.className = 'status-badge status-inactive';
         statusBadge.innerHTML = '<span class="status-dot"></span><span>Inactive</span>';
@@ -588,6 +618,7 @@ function setRunningState(running) {
         statsGrid.style.display = 'none';
         clientsPanel.style.display = 'none';
         trafficPanel.style.display = 'none';
+        currentConfigPanel.style.display = 'none';
         inputs.forEach(input => input.disabled = false);
         document.getElementById('loadLastConfig').disabled = false;
         document.getElementById('internetInterface').disabled = document.getElementById('noInternet').checked;
@@ -672,11 +703,8 @@ async function updateStatus() {
         lastStats.wifi = data.wifiStats;
         lastStats.internet = data.internetStats;
         
-        // Update logs if available
+        // Parse logs for client events
         if (data.status.logs && data.status.logs.length > 0) {
-            const logsContainer = document.getElementById('logsContainer');
-            
-            // Parse logs for client events
             data.status.logs.forEach(log => {
                 const msg = log.message;
                 
@@ -685,7 +713,13 @@ async function updateStatus() {
                     const macMatch = msg.match(/([0-9a-fA-F:]{17})/);
                     if (macMatch) {
                         const mac = macMatch[1];
-                        addLog(`✓ Client connected: ${mac}`, 'success');
+                        // Check if we already logged this
+                        const recentLogs = Array.from(document.getElementById('logsContainer').children)
+                            .slice(0, 5)
+                            .map(el => el.textContent);
+                        if (!recentLogs.some(l => l.includes(mac) && l.includes('connected'))) {
+                            addLog(`✓ Client connected: ${mac}`, 'success');
+                        }
                     }
                 }
                 // Detect client disconnection
@@ -693,15 +727,12 @@ async function updateStatus() {
                     const macMatch = msg.match(/([0-9a-fA-F:]{17})/);
                     if (macMatch) {
                         const mac = macMatch[1];
-                        addLog(`✗ Client disconnected: ${mac}`, 'warning');
-                    }
-                }
-                // Detect authentication
-                else if (msg.includes('4WAY-HS-COMPLETED') || msg.includes('WPA: pairwise key handshake completed')) {
-                    const macMatch = msg.match(/([0-9a-fA-F:]{17})/);
-                    if (macMatch) {
-                        const mac = macMatch[1];
-                        addLog(`🔐 Client authenticated: ${mac}`, 'success');
+                        const recentLogs = Array.from(document.getElementById('logsContainer').children)
+                            .slice(0, 5)
+                            .map(el => el.textContent);
+                        if (!recentLogs.some(l => l.includes(mac) && l.includes('disconnected'))) {
+                            addLog(`✗ Client disconnected: ${mac}`, 'warning');
+                        }
                     }
                 }
             });
@@ -750,7 +781,7 @@ function addLog(message, type = 'info') {
     const container = document.getElementById('logsContainer');
     
     // Clear "initializing" message
-    if (container.children.length === 1 && container.children[0].textContent === 'Initializing...') {
+    if (container.children.length === 1 && container.children[0].textContent.includes('Initializing')) {
         container.innerHTML = '';
     }
     

@@ -516,6 +516,63 @@ body {
     font-size: 14px;
 }
 
+/* Update hostapd */
+
+.subsection-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-link-small {
+    background: none;
+    border: none;
+    color: #667eea;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 2px 6px;
+}
+
+.btn-link-small:hover {
+    text-decoration: underline;
+}
+
+.config-display {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.config-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f7fafc;
+}
+
+.config-item:last-child {
+    border-bottom: none;
+}
+
+.config-label {
+    font-size: 14px;
+    color: #718096;
+    font-weight: 500;
+}
+
+.config-value {
+    font-size: 14px;
+    color: #1a202c;
+    font-weight: 600;
+}
+
 /* Loading Spinner */
 .loading {
     display: inline-block;
